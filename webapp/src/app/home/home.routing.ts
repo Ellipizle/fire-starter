@@ -5,6 +5,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { TodoComponent } from './todo/todo.component';
 import { NotificationsComponent } from './notifications/notifications/notifications.component';
 import { NoteComponent } from './note/note.component';
+import { FileComponent } from '../files/file.component';
 
 const routes: Routes = [
   {
@@ -16,6 +17,7 @@ const routes: Routes = [
       { path: 'todos', component: TodoComponent },
       { path: 'notes', component: NoteComponent },
       { path: 'notifications', component: NotificationsComponent },
+      { path: 'files', component: FileComponent },
     ]
   }
 ];

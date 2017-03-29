@@ -10,6 +10,7 @@ import { UiModule } from '../ui/ui.module';
 import { TodoModule } from './todo/todo.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { NoteModule } from './note/note.module';
+import { FileModule } from '../files/file.module';
 
 @NgModule({
   imports: [
@@ -19,6 +20,7 @@ import { NoteModule } from './note/note.module';
     TodoModule,
     NoteModule,
     NotificationsModule,
+    FileModule,
     HomeRoutingModule
   ],
   exports: [

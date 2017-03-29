@@ -4,11 +4,6 @@ import { UIService } from '../ui/ui.service';
 @Component({
   selector: 'app-home',
   template: `
-    <nav class="navbar sticky-top home-header" [class.sidebar-open]="uiService.sidebarOpen">
-      <h5 class="text-center mb-0">
-        <i class="fa fa-fw fa-home" aria-hidden="true"></i>&nbsp; Home
-      </h5>
-    </nav>
     <router-outlet></router-outlet>
   `,
   styleUrls: ['./home.component.scss']
@@ -40,6 +35,11 @@ export class HomeComponent {
       'name': 'Notifications',
       'link': '/home/notifications',
       'icon': 'comments-o'
+    },
+    {
+      'name': 'Files',
+      'link': '/home/files',
+      'icon': 'files-o'
     },
   ];
 
