@@ -6,14 +6,17 @@ import { UiModule } from '../ui/ui.module';
 
 import { FileComponent } from './file.component';
 import { FileFormComponent } from './file-form.component';
+import { FileUploadModule } from 'ng2-file-upload';
 
 import { FileService } from './file.service';
+import { ContainerApi } from '../shared/sdk/services';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     UiModule,
+    FileUploadModule
   ],
   declarations: [
     FileComponent,
@@ -26,7 +29,8 @@ import { FileService } from './file.service';
     FileComponent,
   ],
   providers: [
-    FileService
+    FileService,
+    ContainerApi
   ]
 })
 export class FileModule { }

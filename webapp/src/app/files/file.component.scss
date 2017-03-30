@@ -1,0 +1,12 @@
+@import '../ui/styles/variables';
+@import '../ui/styles/mixins';
+
+.drop-zone {
+  border    : dashed 3px #ccc;
+  padding   : 20px;
+  text-align: center;
+}
+
+.file-over {
+  border: dashed 3px $brand-success;
+}

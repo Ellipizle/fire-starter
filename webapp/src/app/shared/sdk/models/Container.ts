@@ -44,6 +44,10 @@ export class Container implements ContainerInterface {
       name: 'Container',
       plural: 'Containers',
       properties: {
+        "name": {
+          "type": "string",
+          "required": true
+        },
         "id": {
           name: 'id',
           type: 'any'

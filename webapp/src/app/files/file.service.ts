@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { FireLoopRef, Container } from '../shared/sdk/models';
-import { RealTime } from '../shared/sdk/services/core/real.time';
+import { RealTime, ContainerApi } from '../shared/sdk/services';
 import { Subscription } from 'rxjs/Subscription';
 import { FormService } from '../ui/form/ui-form.service';
 import { Observable } from 'rxjs/Observable';
@@ -15,20 +15,9 @@ export class FileService implements OnDestroy {
   constructor(
     private formService: FormService,
     private rt: RealTime,
+    public containerApi: ContainerApi
   ) {
-    this.subscriptions.push(
-      this.rt.onReady().subscribe(() => {
-        this.containerRef = this.rt.FireLoop.ref<Container>(Container);
-        this.subscriptions.push(this.containerRef.on('change').subscribe(
-          (containers: Container[]) => {
-            this.containers = containers;
-            this.containers.sort((a, b) => {
-              if (a.name > b.name) return 1;
-              if (a.name < b.name) return -1;
-              return 0;
-            });
-          }));
-      }));
+    this.refresh();
   }
 
   ngOnDestroy() {
@@ -40,15 +29,24 @@ export class FileService implements OnDestroy {
     return {
       class: 'btn btn-primary float-right',
       icon: 'plus',
-      text: 'Create'
+      text: 'Create Container'
     };
   }
 
   getTableHeaders() {
     return [
-      'Name',
+      'Container',
+      'Files',
       'Actions',
     ];
+  }
+
+  refresh() {
+    this.subscriptions.push(
+      this.containerApi.getContainers().subscribe(
+        (containers: Container[]) => {
+          this.containers = containers;
+        }));
   }
 
   upsert(container: Container): Observable<Container> {
