@@ -1,13 +1,11 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnChanges } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Container } from '../shared/sdk/models';
 import { FileFormComponent } from './file-form.component';
 import { FileService } from './file.service';
 import { UIService } from '../ui/ui.service';
 import { Subscription } from 'rxjs/Subscription';
-import { FileUploader } from 'ng2-file-upload';
-
-const URL = '/api/';
+import { FileUploader, FileUploaderOptions } from 'ng2-file-upload';
 
 @Component({
   selector: 'app-file',
@@ -17,11 +15,11 @@ const URL = '/api/';
 export class FileComponent implements OnDestroy {
 
   private modalRef;
+  private files;
+  private uploadContainer: Container = new Container();
   private subscriptions: Subscription[] = new Array<Subscription>();
-  public uploader: FileUploader = new FileUploader({
-    url: URL,
-    isHTML5: true
-  });
+  public uploadUrl: string = null;
+  public uploader: FileUploader = new FileUploader({});
   public hasBaseDropZoneOver: boolean = false;
   public hasAnotherDropZoneOver: boolean = false;
 
@@ -30,7 +28,9 @@ export class FileComponent implements OnDestroy {
     private modal: NgbModal,
     private uiService: UIService,
     private fileService: FileService,
-  ) { }
+  ) {
+    this.fileService.getFiles('test').subscribe((files: any) => (this.files = files));
+  }
 
   ngOnDestroy() {
     this.subscriptions.forEach((subscription: Subscription) => subscription.unsubscribe());
@@ -43,7 +43,6 @@ export class FileComponent implements OnDestroy {
     this.modalRef.componentInstance.title = (type === 'create') ? 'Create Container' : 'Update Container';
     this.subscriptions.push(this.modalRef.componentInstance.action.subscribe(event => this.handleAction(event)));
   }
-
 
   public fileOverBase(e: any): void {
     this.hasBaseDropZoneOver = e;
@@ -58,24 +57,58 @@ export class FileComponent implements OnDestroy {
   }
 
   upload(file: any) {
-    console.log(file);
+    file.url = this.fileService.getUploadUrl(this.uploadContainer.name);
     this.handleAction({
       type: 'upload',
-      payload: file._file
+      payload: file
     });
   }
 
-  delete(container: Container) {
+  delete(container: Container): void {
     const question = {
       title: 'Delete Container',
       html: `
-        <p class="lead">Are you sure you want to delete Container
-          <span class="font-weight-bold font-italic">${container.name}</span>?
+        <p class="lead">Are you sure you want to delete container
+          <span class="text-danger font-weight-bold font-italic">${container.name}</span>?
         </p>
       `,
       confirmButtonText: 'Yes, Delete'
     };
     this.uiService.alertError(question, () => this.handleAction({ type: 'delete', payload: container }), () => { });
+  }
+
+  deleteFile(container: string, file: any): void {
+    const question = {
+      title: 'Delete File',
+      html: `
+        <p class="lead">Are you sure you want to delete file
+          <span class="text-danger font-weight-bold font-italic">${file.name}</span>?
+        </p>
+      `,
+      confirmButtonText: 'Yes, Delete'
+    };
+    this.uiService.alertError(question, () => this.handleAction({ type: 'deleteFile', payload: { container: container, file: file } }), () => { });
+  }
+
+  play(file: any) {
+    const question = {
+      title: 'Play Audio',
+      html: `
+      <hr>
+      <h5 class="text-primary">${file.name}</h5>
+      <hr>
+      <div class="alert alert-success fade show pb-2 mb-0">
+        <audio [title]="file.name" controls>
+          <source src="${file.url}" type="audio/wav">
+            Your browser does not support the audio tag.
+        </audio>
+      </div>
+
+      `,
+      confirmButtonText: 'Close',
+      confirmButtonClass: 'btn btn-secondary btn-block'
+    };
+    this.uiService.alertSuccess(question);
   }
 
   handleAction(event) {
@@ -93,13 +126,17 @@ export class FileComponent implements OnDestroy {
         ));
         break;
       case 'upload':
+        this.uploader.uploadItem(event.payload);
+        this.fileService.refresh();
+        break;
+      case 'getFiles':
         this.subscriptions.push(this.fileService.containerApi
-          .upload(event.payload).subscribe(() => {
-            this.fileService.refresh();
-            this.uiService.toastSuccess('Container Updated', 'The Container was updated successfully.');
+          .getFiles(event.payload).subscribe((files: any) => {
+            // this.fileService.refresh();
+            console.log(files);
+            return files;
           }, (err) => {
-            this.modalRef.close();
-            this.uiService.toastError('Update Container Failed', err.message || err.error.message);
+            console.log(err);
           },
         ));
         break;
@@ -107,10 +144,21 @@ export class FileComponent implements OnDestroy {
         this.subscriptions.push(this.fileService.containerApi
           .destroyContainer(event.payload.name).subscribe(() => {
             this.fileService.refresh();
-            this.uiService.toastSuccess('Container Deleted', 'The Container was deleted successfully.');
+            this.uiService.toastSuccess('Container Deleted', 'The container was deleted successfully.');
           },
           (err) => {
             this.uiService.toastError('Delete Container Failed', err.message || err.error.message);
+          },
+        ));
+        break;
+      case 'deleteFile':
+        this.subscriptions.push(this.fileService.containerApi
+          .removeFile(event.payload.container, event.payload.file.name).subscribe(() => {
+            this.fileService.refresh();
+            this.uiService.toastSuccess('File Deleted', 'The file was deleted successfully.');
+          },
+          (err) => {
+            this.uiService.toastError('Delete File Failed', err.message || err.error.message);
           },
         ));
         break;

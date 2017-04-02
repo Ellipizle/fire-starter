@@ -8,7 +8,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
         <div class="card-header" *ngIf="title">
           <div class="row align-items-center">
             <div class="col-8">
-              <h4 class="card-title text-uppercase" [class.mb-0]="!subTitle">
+              <h4 class="card-title text-uppercase text-danger" [class.mb-0]="!subTitle">
                 <i *ngIf="icon" [class]="'fa fa-fw fa-' + icon"></i>
                 {{ title }}
               </h4>

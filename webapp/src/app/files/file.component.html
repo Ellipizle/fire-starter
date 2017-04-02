@@ -6,13 +6,29 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let container of fileService.containers">
-        <td>{{ container.name }}</td>
+      <tr *ngFor="let item of fileService.filesToContainers">
+        <td>{{ item.container.name }}</td>
         <td>
-          <pre>{{ fileService.containerApi.getFiles(container) | async }}</pre>
+          <div *ngFor="let file of item.files" role="alert">
+            <div class="row">
+              <div class="col">
+                <button type="button" class="btn btn-sm btn-primary" (click)="play(file)">
+                  <i class="fa fa-fw fa-play"></i>
+                </button>
+              </div>
+              <div class="col-8">
+                <div class="alert alert-success alert-dismissible fade show">
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close" (click)="deleteFile(item.container.name, file)">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                  <strong>{{ file.name }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
         </td>
         <td>
-          <button type="button" class="btn btn-danger btn-sm" placement="bottom" ngbTooltip="Delete" (click)="delete(container)">
+          <button type="button" class="btn btn-danger btn-sm" placement="bottom" ngbTooltip="Delete" (click)="delete(item)">
             <i class="fa fa-fw fa-trash-o"></i>
           </button>
         </td>
@@ -20,48 +36,64 @@
     </tbody>
   </table>
 </app-card>
+
+<app-card icon="microphone" title="Record">
+
+</app-card>
+
 <app-card icon="upload" title="Upload">
   <div class="row">
-    <div class="col-12">
-      <h4>Add Files</h4>
-      <hr>
-      <div class="row">
-        <div class="col-12 col-lg-4">
-          <div ng2FileDrop [ngClass]="{'file-over': hasBaseDropZoneOver}" (fileOver)="fileOverBase($event)" [uploader]="uploader" class="card drop-zone">
-            <h5 class="text-success">Drop Zone</h5>
-            <i class="text-success fa fa-cloud-upload fa-3x" aria-hidden="true"></i>
-          </div>
-        </div>
-        <div class="col-12 col-lg-4">
-          <h5>Multiple Select</h5>
-          <hr>
-          <input type="file" ng2FileSelect [uploader]="uploader" multiple />
-        </div>
-        <div class="col-12 col-lg-4">
-          <h5>Single Select</h5>
-          <hr>
-          <input type="file" ng2FileSelect [uploader]="uploader" />
-        </div>
+    <div class="col-12 col-md-6">
+      <div class="form-group">
+        <label for="uploadContainer">Upload Container</label>
+        <select class="form-control" id="containerName" required [(ngModel)]="uploadContainer.name" name="containerName" (select)="uploadUrl = fileService.getUploadUrl(uploadContainer)">
+          <option *ngFor="let item of fileService.containers" [value]="item.name">{{ item.name }}</option>
+        </select>
       </div>
+    </div>
+    <div class="col-12 col-md-6 text-right">
+      <h4 [class.text-success]="uploader?.queue?.length">Upload Queue</h4>
+      <p class="lead mb-0"><strong>Files in Queue: <span [class.text-primary]="uploader?.queue?.length">{{ uploader?.queue?.length }}</span></strong></p>
     </div>
   </div>
   <hr>
   <div class="row">
     <div class="col-12">
-      <h4>Upload Queue</h4>
-      <p class="lead mb-0">Files in Queue: {{ uploader?.queue?.length }}</p>
+      <h4>Add Files</h4>
       <hr>
+      <div class="row align-items-center">
+        <div class="col-12 col-lg-7 mb-2">
+          <div ng2FileDrop [ngClass]="{'file-over': hasBaseDropZoneOver}" (fileOver)="fileOverBase($event)" [uploader]="uploader" class="card drop-zone">
+            <h5 class="text-success">Drop Zone</h5>
+            <i class="text-success fa fa-cloud-upload fa-3x" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="col-12 col-lg-5 mb-2">
+          <div class="row">
+            <div class="col-12">
+              <h5>Single Select</h5>
+              <input class="text-center" type="file" ng2FileSelect [uploader]="uploader" />
+              <hr>
+            </div>
+            <div class="col-12">
+              <h5>Multiple Select</h5>
+              <input type="file" ng2FileSelect [uploader]="uploader" multiple />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="col-3 align-self-end">
-      <p class="lead">Upload Progress:</p>
+  </div>
+  <hr>
+  <div *ngIf="uploader?.queue?.length" class="row">
+    <div class="col-3">
+      <p class="lead float-right"><strong>Upload Progress:</strong></p>
     </div>
     <div class="col-9 align-self-center pb-3">
       <div class="progress">
         <div class="progress-bar" role="progressbar" [ngStyle]="{ 'width': uploader.progress + '%' }"></div>
       </div>
     </div>
-  </div>
-  <div class="row">
     <div class="col-12 col-lg-3">
       <button type="button" class="btn btn-success btn-sm btn-block" (click)="uploader.uploadAll()" [disabled]="!uploader.getNotUploadedItems().length">
         <span class="fa fa-fw fa-upload"></span> Upload All
@@ -100,14 +132,14 @@
             </td>
             <td nowrap>
               <button type="button" class="btn btn-success btn-sm" (click)="upload(item)" [disabled]="item.isReady || item.isUploading || item.isSuccess">
-                  <span class="fa fa-fw fa-upload"></span>
-                </button>
+                <span class="fa fa-fw fa-upload"></span>
+              </button>
               <button type="button" class="btn btn-warning btn-sm" (click)="item.cancel()" [disabled]="!item.isUploading">
-                  <span class="fa fa-fw fa-ban"></span>
-                </button>
+                <span class="fa fa-fw fa-ban"></span>
+              </button>
               <button type="button" class="btn btn-danger btn-sm" (click)="item.remove()">
-                  <span class="fa fa-fw fa-trash"></span>
-                </button>
+                <span class="fa fa-fw fa-trash"></span>
+              </button>
             </td>
           </tr>
         </tbody>
